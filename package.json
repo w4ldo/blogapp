@@ -24,7 +24,8 @@
     "dotenv": "^5.0.0",
     "express": "^4.16.2",
     "jsonwebtoken": "^8.1.1",
-    "mongoose": "^5.0.6"
+    "mongoose": "^5.0.6",
+    "prop-types": "^15.6.1"
   },
   "devDependencies": {
     "jest": "^22.3.0",

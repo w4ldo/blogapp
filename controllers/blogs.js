@@ -17,6 +17,8 @@ const formatBlog = (blog) => {
 }
 
 blogsRouter.get('/', async (request, response) => {
+    /*await Blog.remove({})*/
+
     const blogs = await Blog
         .find({})
         .populate('user', { username: 1, name: 1 })
@@ -39,15 +41,6 @@ blogsRouter.get('/:id', async (request, response) => {
     }
 })
 
-blogsRouter.delete('/:id', async (request, response) => {
-    try {
-        await Blog.findByIdAndRemove(request.params.id)
-        response.status(204).end()
-    } catch (exception) {
-        response.status(400).send({ error: 'malformatted id' })
-    }
-})
-
 const getTokenFrom = (request) => {
     const authorization = request.get('authorization')
     if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
@@ -55,6 +48,29 @@ const getTokenFrom = (request) => {
     }
     return null
 }
+
+blogsRouter.delete('/:id', async (request, response) => {
+    try {
+        const blogi = await Blog.findById(request.params.id)
+        const token = getTokenFrom(request)
+        const decodedToken = jwt.verify(token, process.env.SECRET)
+
+        if (!token || !decodedToken.id) {
+            return response.status(401).json({ error: 'token missing or invalid' })
+        }
+        const user = await User.findById(decodedToken.id)
+
+        if (user._id.toString() === blogi.user.toString()) {
+            await Blog.findByIdAndRemove(request.params.id)
+            response.status(204).end()
+        } else  {
+            response.status(401).send({ error: 'unauthorized' })
+        }
+
+    } catch (exception) {
+        response.status(400).send({ error: 'bad request' })
+    }
+})
 
 blogsRouter.post('/', async (request, response) => {
     const body = request.body
